@@ -16,6 +16,9 @@
     "active": true,
     "targets": ["nsis"],
     "icon": ["icons/icon.ico", "icons/icon.png"],
+    "resources": {
+      "libs/*.dll": "./"
+    },
     "windows": {
       "nsis": {
         "installMode": "currentUser",
