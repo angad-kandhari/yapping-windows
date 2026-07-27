@@ -18,8 +18,6 @@
   <a href="https://get-yapping.com"><b>get-yapping.com</b></a>
   &nbsp;&middot;&nbsp;
   <a href="https://github.com/angad-kandhari/yapping-windows/releases/latest">Download</a>
-  &nbsp;&middot;&nbsp;
-  <a href="https://github.com/angad-kandhari/yapping">yapping for macOS</a>
 </p>
 
 <p align="center">
@@ -34,18 +32,15 @@
 
 Hold **Ctrl+Win** anywhere on your PC, speak, release. Your words appear
 at the cursor. Nothing leaves your machine. No cloud, no account, no
-subscription, no word limits.
-
-This is the Windows port of [yapping for macOS](https://github.com/angad-kandhari/yapping),
-built from scratch in Rust around the same idea: dictation should be a
-key you hold, not an app you open.
+subscription, no word limits. Dictation should be a key you hold, not an
+app you open.
 
 ## Status: early beta
 
 The core loop works: tray app, Ctrl+Win hold-to-talk, on-device
 transcription, paste at cursor with your clipboard restored afterward.
 The recording overlay, transcript cleanup, per-app styles, settings,
-and history from the macOS app are on the way.
+and history are on the way.
 
 ## Install
 
