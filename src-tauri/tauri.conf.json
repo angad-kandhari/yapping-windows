@@ -18,7 +18,8 @@
     "icon": ["icons/icon.ico", "icons/icon.png"],
     "windows": {
       "nsis": {
-        "installMode": "currentUser"
+        "installMode": "currentUser",
+        "installerIcon": "icons/icon.ico"
       }
     }
   }
