@@ -17,10 +17,12 @@ jobs:
       - uses: Swatinem/rust-cache@v2
         with:
           workspaces: ". -> target"
-          # sherpa-rs-sys downloads prebuilt onnx libs into its OUT_DIR;
-          # the default cache cleanup prunes them while keeping the build
-          # fingerprint, which poisons later runs with LNK1181
-          cache-all-crates: "true"
+          # Never cache the target dir: sherpa-rs-sys downloads prebuilt
+          # onnx libs into its OUT_DIR and the cache cleanup prunes them
+          # while keeping the fingerprint, so every cache-restored build
+          # dies at link time (LNK1181 cargs.lib). Registry caching alone
+          # is safe and still saves the dependency downloads.
+          cache-targets: "false"
 
       - name: Core unit tests
         run: cargo test -p yapping-core
