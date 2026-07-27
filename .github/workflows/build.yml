@@ -42,7 +42,9 @@ jobs:
         shell: pwsh
         run: |
           cargo build --release
-          Get-ChildItem -Path target/release/build -Recurse -Filter *.dll | Copy-Item -Destination src-tauri/libs -Force
+          # sherpa-rs-sys copies its shared libs to the top of the
+          # profile dir (target/release/*.dll), not the build subtree
+          Get-ChildItem -Path target/release -Filter *.dll | Copy-Item -Destination src-tauri/libs -Force
           Remove-Item src-tauri/libs/placeholder.dll
           Get-ChildItem src-tauri/libs
 
