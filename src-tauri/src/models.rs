@@ -76,9 +76,8 @@ pub fn ensure(status: impl Fn(&str)) -> anyhow::Result<PathBuf> {
             }
             out.write_all(&chunk[..n]).context("disk write failed")?;
             done += n as u64;
-            if total > 0 {
-                let pct = done * 100 / total;
-                if pct != last_pct && pct % 5 == 0 {
+            if let Some(pct) = (done * 100).checked_div(total) {
+                if pct != last_pct && pct.is_multiple_of(5) {
                     last_pct = pct;
                     status(&format!("{label}: {name} — {pct}%"));
                 }
