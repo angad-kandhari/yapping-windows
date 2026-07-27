@@ -79,7 +79,7 @@ pub fn ensure(status: impl Fn(&str)) -> anyhow::Result<PathBuf> {
             if let Some(pct) = (done * 100).checked_div(total) {
                 if pct != last_pct && pct.is_multiple_of(5) {
                     last_pct = pct;
-                    status(&format!("{label}: {name} — {pct}%"));
+                    status(&format!("{label}: {name}, {pct}%"));
                 }
             }
         }

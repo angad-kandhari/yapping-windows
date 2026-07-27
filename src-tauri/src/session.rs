@@ -34,7 +34,7 @@ pub fn run(app: AppHandle) {
 fn run_pipeline(app: &AppHandle) -> anyhow::Result<()> {
     use yapping_core::{resample_to_16k_mono, Action, Session};
 
-    let ready = "Ready — hold Ctrl+Win to talk";
+    let ready = "Ready. Hold Ctrl+Win to talk";
 
     let model_dir = crate::models::ensure(|msg| set_status(app, msg))?;
     set_status(app, "Loading speech model…");

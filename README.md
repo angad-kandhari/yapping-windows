@@ -1,41 +1,93 @@
-# yapping for Windows
+<p align="center">
+  <img src="icon-pack/yapping-icon-1024.png" width="110" alt="yapping icon">
+</p>
 
-Windows port of [yapping](https://github.com/angad-kandhari/yapping),
-the hold-to-talk dictation app. Private while in development; goes
-public when it ships.
+<p align="center">
+  <picture>
+    <source media="(prefers-color-scheme: dark)" srcset="icon-pack/wordmark/wordmark-dark.png">
+    <img src="icon-pack/wordmark/wordmark-light.png" width="240" alt="yapping">
+  </picture>
+</p>
 
-Hold **Ctrl+Win**. Talk. Release. Text appears at your cursor.
+<p align="center">
+  <b>Hold Ctrl+Win. Yap. Done.</b><br>
+  Private, on-device dictation for Windows.
+</p>
 
-## Status: Milestone 1 (core loop)
+<p align="center">
+  <a href="https://get-yapping.com"><b>get-yapping.com</b></a>
+  &nbsp;&middot;&nbsp;
+  <a href="https://github.com/angad-kandhari/yapping-windows/releases/latest">Download</a>
+  &nbsp;&middot;&nbsp;
+  <a href="https://github.com/angad-kandhari/yapping">yapping for macOS</a>
+</p>
 
-Tray app, Ctrl+Win hold-to-talk, on-device transcription with
-Parakeet-TDT 0.6B v2 (int8, via sherpa-onnx), paste at cursor with
-clipboard restore. No overlay, cleanup, or settings yet; those are M2.
+<p align="center">
+  <img src="https://img.shields.io/badge/Windows-10%2F11%20x64-0078D4" alt="Windows 10/11 x64">
+  <img src="https://img.shields.io/badge/Rust-Tauri%202-orange" alt="Rust + Tauri 2">
+  <img src="https://img.shields.io/badge/processing-100%25%20local-2ea44f" alt="100% local">
+  <img src="https://img.shields.io/github/v/release/angad-kandhari/yapping-windows" alt="latest release">
+  <img src="https://img.shields.io/github/license/angad-kandhari/yapping-windows" alt="Apache 2.0">
+</p>
 
-## Stack
+---
 
-- Tauri v2 + Rust; no Node build (static `dist/` placeholder)
-- `core/` is the platform-independent session state machine and
-  resampler, unit tested on any OS (`cargo test -p yapping-core`)
-- `src-tauri/` holds the Windows pipeline: WH_KEYBOARD_LL hotkey hook,
-  cpal capture, sherpa-rs offline transducer decode, SendInput paste
-- Model files download on first run (~640 MB) from Hugging Face into
-  `%LOCALAPPDATA%\yapping\models`
+Hold **Ctrl+Win** anywhere on your PC, speak, release. Your words appear
+at the cursor. Nothing leaves your machine. No cloud, no account, no
+subscription, no word limits.
+
+This is the Windows port of [yapping for macOS](https://github.com/angad-kandhari/yapping),
+built from scratch in Rust around the same idea: dictation should be a
+key you hold, not an app you open.
+
+## Status: early beta
+
+The core loop works: tray app, Ctrl+Win hold-to-talk, on-device
+transcription, paste at cursor with your clipboard restored afterward.
+The recording overlay, transcript cleanup, per-app styles, settings,
+and history from the macOS app are on the way.
+
+## Install
+
+[Download Yapping-Setup.exe](https://github.com/angad-kandhari/yapping-windows/releases/latest/download/Yapping-Setup.exe)
+and run it. It installs per-user, so no admin prompt.
+
+The installer is not code-signed yet, so Windows SmartScreen will warn
+on first run; choose "More info", then "Run anyway". Code signing is
+planned. The code is right here if you would rather read it first.
+
+On first launch, yapping downloads its speech model (~640 MB, one time)
+into `%LOCALAPPDATA%\yapping\models` with progress in the tray menu, and
+notifies you when it is ready.
+
+## Use
+
+1. Put your cursor in any text field.
+2. Hold **Ctrl+Win** and speak.
+3. Release. The transcript pastes at the cursor.
+
+A quick tap does nothing. Esc while holding cancels the dictation.
+
+## Privacy
+
+- Speech recognition: [Parakeet-TDT 0.6B v2](https://huggingface.co/nvidia/parakeet-tdt-0.6b-v2)
+  running locally via [sherpa-onnx](https://github.com/k2-fsa/sherpa-onnx)
+- Network connections: one download from Hugging Face on first run for
+  the model files; nothing else
+- Audio is never written to disk
 
 ## Building
 
-CI (GitHub Actions, windows-latest) builds an NSIS installer on every
-push; grab `Yapping-Setup` from the run's artifacts. Local build on a
-Windows machine: `npx @tauri-apps/cli@2 build`.
+Rust workspace, no Node build. `core/` holds the platform-independent
+session logic (`cargo test -p yapping-core` runs anywhere); `src-tauri/`
+holds the Windows pipeline. Build an installer on Windows with
+`npx @tauri-apps/cli@2 build`, or grab the artifact from any green run
+on the Actions tab.
 
-## M1 test checklist
+## Project
 
-1. Installer runs; tray icon appears; launching a second copy does
-   nothing (single instance).
-2. First run shows download progress in the tray menu/tooltip and posts
-   a notification when the model is ready.
-3. In Notepad: hold Ctrl+Win, speak a sentence, release. The raw
-   transcript pastes at the cursor with a trailing space.
-4. Whatever was on the clipboard before dictating is still there after.
-5. A quick tap of Ctrl+Win does nothing; Esc mid-hold discards.
-6. Quit from the tray menu exits cleanly.
+- Website: [get-yapping.com](https://get-yapping.com)
+- License: [Apache 2.0](LICENSE)
+
+The speech model is NVIDIA Parakeet-TDT 0.6B v2, published under
+CC-BY-4.0, converted to onnx by the sherpa-onnx project.
