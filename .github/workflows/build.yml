@@ -35,12 +35,15 @@ jobs:
       # app dies at launch with "sherpa-onnx-c-api.dll was not found".
       # Compile first, harvest every DLL the build produced, and let the
       # resources mapping in tauri.conf.json place them next to the exe.
+      # The committed zero-byte placeholder.dll keeps the resources glob
+      # valid before this step has run; it is deleted here so only real
+      # DLLs ship.
       - name: Stage sherpa DLLs
         shell: pwsh
         run: |
           cargo build --release
-          New-Item -ItemType Directory -Force src-tauri/libs | Out-Null
           Get-ChildItem -Path target/release/build -Recurse -Filter *.dll | Copy-Item -Destination src-tauri/libs -Force
+          Remove-Item src-tauri/libs/placeholder.dll
           Get-ChildItem src-tauri/libs
 
       - name: Build installer

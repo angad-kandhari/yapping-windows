@@ -1,4 +1,6 @@
 /target
 node_modules/
 .DS_Store
-src-tauri/libs/
+
+src-tauri/libs/*
+!src-tauri/libs/placeholder.dll
