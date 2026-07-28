@@ -1,1 +1,1 @@
-{}
+{"default":{"identifier":"default","description":"Main Yapping window","local":true,"windows":["main"],"permissions":["core:default","dialog:default","opener:default"]}}

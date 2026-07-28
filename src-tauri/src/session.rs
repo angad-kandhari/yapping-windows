@@ -1,6 +1,6 @@
 //! The pipeline thread: model bootstrap, then the hold-to-talk loop.
 
-use tauri::AppHandle;
+use tauri::{AppHandle, Emitter};
 
 pub fn set_status(app: &AppHandle, text: &str) {
     use tauri::Manager;
@@ -8,8 +8,9 @@ pub fn set_status(app: &AppHandle, text: &str) {
         let _ = line.0.set_text(text);
     }
     if let Some(tray) = app.tray_by_id("main") {
-        let _ = tray.set_tooltip(Some(format!("Yapping — {text}")));
+        let _ = tray.set_tooltip(Some(format!("Yapping: {text}")));
     }
+    let _ = app.emit("status", text.to_string());
 }
 
 fn notify(app: &AppHandle, title: &str, body: &str) {
@@ -32,13 +33,17 @@ pub fn run(app: AppHandle) {
 
 #[cfg(windows)]
 fn run_pipeline(app: &AppHandle) -> anyhow::Result<()> {
+    use std::sync::atomic::Ordering;
     use yapping_core::{resample_to_16k_mono, Action, Session};
 
     let ready = "Ready. Hold Ctrl+Win to talk";
 
     let model_dir = crate::models::ensure(|msg| set_status(app, msg))?;
     set_status(app, "Loading speech model…");
-    let mut engine = crate::engine::Engine::new(&model_dir)?;
+    let engine = crate::engine::Engine::new(&model_dir)?;
+    crate::state::set_engine(engine);
+    crate::state::MODEL_READY.store(true, Ordering::SeqCst);
+    let _ = app.emit("model-ready", true);
     notify(
         app,
         "Yapping is ready",
@@ -58,7 +63,6 @@ fn run_pipeline(app: &AppHandle) -> anyhow::Result<()> {
                     set_status(app, "Listening…");
                 }
                 Err(e) => {
-                    // Poison the hold so the matching release discards.
                     session.handle(yapping_core::KeyEvent::Cancelled);
                     set_status(app, &format!("Microphone error: {e}"));
                 }
@@ -68,13 +72,32 @@ fn run_pipeline(app: &AppHandle) -> anyhow::Result<()> {
                     set_status(app, "Transcribing…");
                     let (samples, channels, rate) = r.stop();
                     let mono = resample_to_16k_mono(&samples, channels, rate);
-                    let text = engine.transcribe(&mono);
-                    let text = text.trim();
-                    if !text.is_empty() {
-                        if let Err(e) = crate::paste::paste(&format!("{text} ")) {
-                            set_status(app, &format!("Paste failed: {e}"));
-                            continue;
+                    let raw = match crate::state::engine() {
+                        Some(e) => e.lock().unwrap().transcribe(&mono),
+                        None => String::new(),
+                    };
+                    let raw = raw.trim().to_string();
+                    if !raw.is_empty() {
+                        let settings = crate::config::get();
+                        if settings.cleanup != "none" {
+                            set_status(app, "Cleaning up…");
                         }
+                        let (out, cleaned) = crate::cleanup::apply(&raw);
+                        let text = if settings.trailing_space {
+                            format!("{out} ")
+                        } else {
+                            out
+                        };
+                        let pasted = if settings.copy_only {
+                            crate::paste::copy_only(&text)
+                        } else {
+                            crate::paste::paste(&text)
+                        };
+                        if let Err(e) = pasted {
+                            set_status(app, &format!("Paste failed: {e}"));
+                        }
+                        crate::history::append(&raw, cleaned.as_deref());
+                        let _ = app.emit("history-changed", ());
                     }
                 }
                 set_status(app, ready);

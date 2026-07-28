@@ -1,13 +1,14 @@
 {
   "$schema": "https://schema.tauri.app/config/2",
   "productName": "Yapping",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "identifier": "com.angad.yapping",
   "build": {
     "frontendDist": "../dist"
   },
   "app": {
     "windows": [],
+    "withGlobalTauri": true,
     "security": {
       "csp": null
     }

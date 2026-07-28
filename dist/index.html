@@ -2,21 +2,138 @@
 <html lang="en">
 <head>
   <meta charset="utf-8" />
-  <title>yapping</title>
-  <style>
-    body {
-      margin: 0;
-      display: grid;
-      place-items: center;
-      min-height: 100vh;
-      background: #101010;
-      color: #f5f5f5;
-      font-family: system-ui, sans-serif;
-    }
-    strong { color: #FF5A1F; }
-  </style>
+  <title>Yapping</title>
+  <link rel="stylesheet" href="styles.css" />
 </head>
 <body>
-  <p><strong>yapping</strong> lives in the tray. Hold Ctrl+Win to talk.</p>
+<div class="shell">
+  <header>
+    <div class="bars"><span></span><span></span><span></span><span></span><span></span><span></span></div>
+    <h1>yapping</h1>
+    <span class="ver mono" id="version"></span>
+  </header>
+
+  <nav id="tabs">
+    <button data-tab="setup" id="tab-setup" style="display:none">Setup</button>
+    <button data-tab="settings" class="active">Settings</button>
+    <button data-tab="history">History</button>
+    <button data-tab="listen">Listen</button>
+    <button data-tab="files">Files</button>
+    <button data-tab="updates">Updates</button>
+  </nav>
+
+  <main>
+    <section id="setup">
+      <div class="card">
+        <h3>Welcome to yapping</h3>
+        <p class="hint">Three things and you're talking instead of typing.</p>
+        <div class="step">
+          <span class="num">01</span>
+          <div>
+            <h4>Hold <span class="keycap">Ctrl</span> + <span class="keycap">Win</span> and talk</h4>
+            <p>Anywhere your cursor blinks. Release and the words appear. A quick tap does nothing; Esc while holding cancels.</p>
+          </div>
+        </div>
+        <div class="step">
+          <span class="num">02</span>
+          <div>
+            <h4>Let the microphone through</h4>
+            <p>If nothing transcribes, check Windows Settings &gt; Privacy &amp; security &gt; Microphone, and allow desktop apps to access it.</p>
+          </div>
+        </div>
+        <div class="step">
+          <span class="num">03</span>
+          <div>
+            <h4>The speech model downloads once</h4>
+            <p id="setup-model">Checking…</p>
+          </div>
+        </div>
+      </div>
+      <button class="btn accent" id="setup-done">Start yapping</button>
+    </section>
+
+    <section id="settings" class="active">
+      <div class="card">
+        <h3>Dictation</h3>
+        <div class="row">
+          <label>Trailing space<span class="sub">Add a space after each dictation so the next one flows on.</span></label>
+          <span class="switch"><input type="checkbox" id="s-trailing"><span class="track"></span></span>
+        </div>
+        <div class="row">
+          <label>Copy instead of paste<span class="sub">Put the text on the clipboard and let you paste it yourself.</span></label>
+          <span class="switch"><input type="checkbox" id="s-copyonly"><span class="track"></span></span>
+        </div>
+      </div>
+      <div class="card">
+        <h3>Cleanup</h3>
+        <p class="hint">Polish transcripts with a local model. Raw words always win if a cleanup looks wrong. Off by default; everything stays on your machine either way.</p>
+        <div class="row">
+          <label>Provider</label>
+          <select id="s-cleanup">
+            <option value="none">Off (raw transcript)</option>
+            <option value="ollama">Ollama (local)</option>
+            <option value="custom">Custom OpenAI-compatible endpoint</option>
+          </select>
+        </div>
+        <div id="ollama-rows">
+          <div class="row"><label>Ollama URL</label><input type="text" id="s-ollama-url" spellcheck="false"></div>
+          <div class="row"><label>Model<span class="sub">gemma3:4b recommended. Avoid reasoning models; they leak their thinking.</span></label><input type="text" id="s-ollama-model" spellcheck="false"></div>
+        </div>
+        <div id="custom-rows">
+          <div class="row"><label>Endpoint URL</label><input type="text" id="s-custom-url" placeholder="https://…/v1" spellcheck="false"></div>
+          <div class="row"><label>API key</label><input type="password" id="s-custom-key"></div>
+          <div class="row"><label>Model</label><input type="text" id="s-custom-model" spellcheck="false"></div>
+        </div>
+        <div class="row" style="display:block">
+          <label>Cleanup prompt</label>
+          <textarea id="s-prompt" spellcheck="false" style="margin-top:8px"></textarea>
+          <button class="btn ghost small" id="s-prompt-reset" style="margin-top:8px">Reset to default</button>
+        </div>
+      </div>
+    </section>
+
+    <section id="history">
+      <div class="card">
+        <h3>Last 50 dictations</h3>
+        <p class="hint">Raw and cleaned side by side, stored only on this PC. Audio is never saved.</p>
+        <div id="history-list"></div>
+      </div>
+      <button class="btn ghost" id="history-clear">Clear history</button>
+    </section>
+
+    <section id="listen">
+      <div class="card">
+        <h3>Listen to system audio</h3>
+        <p class="hint">Transcribes whatever your PC is playing: lectures, podcasts, the other side of a call. Text lands every few seconds. Nothing is recorded to disk.</p>
+        <button class="btn accent" id="listen-toggle">Start listening</button>
+        <div class="transcript" id="listen-out" data-empty="The transcript will appear here." style="margin-top:14px"></div>
+        <div style="margin-top:10px"><button class="btn ghost small" id="listen-copy">Copy transcript</button></div>
+      </div>
+    </section>
+
+    <section id="files">
+      <div class="card">
+        <h3>Transcribe a file</h3>
+        <p class="hint">Audio or video: wav, mp3, m4a, mp4, flac, ogg, and friends. Long files are processed in chunks; everything stays local.</p>
+        <button class="btn accent" id="file-pick">Choose a file…</button>
+        <div class="progress" id="file-progress-wrap" style="display:none"><div id="file-progress"></div></div>
+        <div class="transcript" id="file-out" data-empty="The transcript will appear here."></div>
+        <div style="margin-top:10px"><button class="btn ghost small" id="file-copy">Copy transcript</button></div>
+      </div>
+    </section>
+
+    <section id="updates">
+      <div class="card">
+        <h3>Updates</h3>
+        <p class="hint">Checks GitHub only when you click. No background phoning home.</p>
+        <button class="btn" id="updates-check">Check for updates</button>
+        <div id="updates-list" style="margin-top:8px"></div>
+      </div>
+    </section>
+  </main>
+
+  <footer><span class="dot"></span><span id="statusline">Starting…</span></footer>
+</div>
+<script src="app.js"></script>
 </body>
 </html>

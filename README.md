@@ -35,12 +35,20 @@ at the cursor. Nothing leaves your machine. No cloud, no account, no
 subscription, no word limits. Dictation should be a key you hold, not an
 app you open.
 
-## Status: early beta
+## Status: beta
 
-The core loop works: tray app, Ctrl+Win hold-to-talk, on-device
-transcription, paste at cursor with your clipboard restored afterward.
-The recording overlay, transcript cleanup, per-app styles, settings,
-and history are on the way.
+| | |
+|---|---|
+| **Hold to talk** | Hold Ctrl+Win anywhere, release, text pastes at the cursor |
+| **Setup assistant** | First launch walks through the hotkey, mic access, and the model download |
+| **Cleanup** | Optional polish via local Ollama or any OpenAI-compatible endpoint; raw words always win |
+| **History** | Last 50 dictations, raw and cleaned side by side, local only |
+| **Listen mode** | Transcribes what your PC is playing via loopback capture |
+| **Transcribe files** | Audio and video files, decoded locally, no ffmpeg needed |
+| **Honest updates** | Checks GitHub only when you click, shows release notes |
+
+The recording overlay and per-app styles from the macOS app are still
+on the way.
 
 ## Install
 

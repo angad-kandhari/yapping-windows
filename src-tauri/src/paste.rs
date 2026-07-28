@@ -36,6 +36,15 @@ fn key(vk: VIRTUAL_KEY, up: bool) -> INPUT {
     }
 }
 
+/// Copy-only mode: stage the text on the clipboard and leave it there.
+pub fn copy_only(text: &str) -> anyhow::Result<()> {
+    let mut clipboard = arboard::Clipboard::new().context("clipboard unavailable")?;
+    clipboard
+        .set_text(text.to_string())
+        .context("could not copy text to the clipboard")?;
+    Ok(())
+}
+
 pub fn paste(text: &str) -> anyhow::Result<()> {
     let mut clipboard = arboard::Clipboard::new().context("clipboard unavailable")?;
     let saved = clipboard.get_text().ok();
