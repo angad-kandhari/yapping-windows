@@ -111,7 +111,7 @@ fn listen_start(app: AppHandle) -> Result<(), String> {
     #[cfg(windows)]
     {
         set_listen_label(&app, true);
-        return listen::start(app.clone());
+        listen::start(app.clone())
     }
     #[cfg(not(windows))]
     {

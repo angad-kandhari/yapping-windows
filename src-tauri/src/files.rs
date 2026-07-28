@@ -60,11 +60,7 @@ fn run(app: &AppHandle, path: &str) -> Result<String, String> {
     let mut frames_seen = 0u64;
     let mut sample_buf: Option<SampleBuffer<f32>> = None;
 
-    loop {
-        let packet = match format.next_packet() {
-            Ok(p) => p,
-            Err(_) => break,
-        };
+    while let Ok(packet) = format.next_packet() {
         if packet.track_id() != track_id {
             continue;
         }

@@ -72,7 +72,7 @@ pub fn newer_releases() -> Result<Vec<Release>, String> {
             })
         })
         .collect();
-    out.sort_by(|a, b| parse_ver(&b.tag).cmp(&parse_ver(&a.tag)));
+    out.sort_by_key(|r| std::cmp::Reverse(parse_ver(&r.tag)));
     Ok(out)
 }
 
