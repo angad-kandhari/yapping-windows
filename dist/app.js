@@ -63,6 +63,7 @@ async function loadSettings() {
   settings = await invoke("get_settings");
   $("s-trailing").checked = settings.trailing_space;
   $("s-copyonly").checked = settings.copy_only;
+  $("s-overlay").checked = settings.overlay;
   $("s-cleanup").value = settings.cleanup;
   $("s-ollama-url").value = settings.ollama_url;
   $("s-ollama-model").value = settings.ollama_model;
@@ -75,6 +76,7 @@ async function loadSettings() {
 }
 bindToggle("s-trailing", "trailing_space");
 bindToggle("s-copyonly", "copy_only");
+bindToggle("s-overlay", "overlay");
 bindText("s-ollama-url", "ollama_url");
 bindText("s-ollama-model", "ollama_model");
 bindText("s-custom-url", "custom_url");

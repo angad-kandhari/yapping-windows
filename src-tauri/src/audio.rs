@@ -3,13 +3,25 @@
 
 use anyhow::{bail, Context};
 use cpal::traits::{DeviceTrait, HostTrait, StreamTrait};
+use std::sync::atomic::{AtomicU32, Ordering};
 use std::sync::{Arc, Mutex};
 
 pub struct Recorder {
     stream: cpal::Stream,
     buffer: Arc<Mutex<Vec<f32>>>,
+    /// RMS of the latest callback chunk, stored as f32 bits so the
+    /// overlay can read it lock-free while the stream runs.
+    level: Arc<AtomicU32>,
     channels: usize,
     rate: u32,
+}
+
+fn push_level(level: &AtomicU32, samples: &[f32]) {
+    if samples.is_empty() {
+        return;
+    }
+    let rms = (samples.iter().map(|s| s * s).sum::<f32>() / samples.len() as f32).sqrt();
+    level.store(rms.to_bits(), Ordering::Relaxed);
 }
 
 impl Recorder {
@@ -24,22 +36,28 @@ impl Recorder {
         let channels = config.channels() as usize;
         let rate = config.sample_rate().0;
         let buffer = Arc::new(Mutex::new(Vec::<f32>::new()));
+        let level = Arc::new(AtomicU32::new(0));
 
         let sink = buffer.clone();
+        let meter = level.clone();
         let on_err = |e| eprintln!("audio stream error: {e}");
         let stream = match config.sample_format() {
             cpal::SampleFormat::F32 => device.build_input_stream(
                 &config.into(),
-                move |data: &[f32], _| sink.lock().unwrap().extend_from_slice(data),
+                move |data: &[f32], _| {
+                    push_level(&meter, data);
+                    sink.lock().unwrap().extend_from_slice(data);
+                },
                 on_err,
                 None,
             )?,
             cpal::SampleFormat::I16 => device.build_input_stream(
                 &config.into(),
                 move |data: &[i16], _| {
-                    sink.lock()
-                        .unwrap()
-                        .extend(data.iter().map(|s| *s as f32 / 32768.0))
+                    let converted: Vec<f32> =
+                        data.iter().map(|s| *s as f32 / 32768.0).collect();
+                    push_level(&meter, &converted);
+                    sink.lock().unwrap().extend_from_slice(&converted);
                 },
                 on_err,
                 None,
@@ -47,9 +65,12 @@ impl Recorder {
             cpal::SampleFormat::U16 => device.build_input_stream(
                 &config.into(),
                 move |data: &[u16], _| {
-                    sink.lock()
-                        .unwrap()
-                        .extend(data.iter().map(|s| (*s as f32 - 32768.0) / 32768.0))
+                    let converted: Vec<f32> = data
+                        .iter()
+                        .map(|s| (*s as f32 - 32768.0) / 32768.0)
+                        .collect();
+                    push_level(&meter, &converted);
+                    sink.lock().unwrap().extend_from_slice(&converted);
                 },
                 on_err,
                 None,
@@ -61,9 +82,15 @@ impl Recorder {
         Ok(Self {
             stream,
             buffer,
+            level,
             channels,
             rate,
         })
+    }
+
+    /// Shared handle to the live input level, for the recording overlay.
+    pub fn level_handle(&self) -> Arc<AtomicU32> {
+        self.level.clone()
     }
 
     /// Stops capture and returns (interleaved samples, channels, sample rate).

@@ -1,1 +1,1 @@
-{"default":{"identifier":"default","description":"Main Yapping window","local":true,"windows":["main"],"permissions":["core:default","dialog:default","opener:default"]}}
+{"default":{"identifier":"default","description":"Main Yapping window and the recording overlay","local":true,"windows":["main","overlay"],"permissions":["core:default","dialog:default","opener:default"]}}

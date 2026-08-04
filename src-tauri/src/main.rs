@@ -16,6 +16,7 @@ mod hotkey;
 mod listen;
 mod history;
 mod models;
+mod overlay;
 #[cfg(windows)]
 mod paste;
 mod session;

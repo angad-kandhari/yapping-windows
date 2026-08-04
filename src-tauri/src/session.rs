@@ -66,6 +66,7 @@ fn run_pipeline(app: &AppHandle) -> anyhow::Result<()> {
                         &crate::config::get().styles,
                         crate::styles::foreground_process().as_deref(),
                     );
+                    crate::overlay::show(app, r.level_handle());
                     recorder = Some(r);
                     match &active_style {
                         Some(s) => set_status(app, &format!("Listening… ({})", s.name)),
@@ -78,6 +79,7 @@ fn run_pipeline(app: &AppHandle) -> anyhow::Result<()> {
                 }
             },
             Action::StopAndTranscribe => {
+                crate::overlay::hide(app);
                 if let Some(r) = recorder.take() {
                     set_status(app, "Transcribing…");
                     let (samples, channels, rate) = r.stop();
@@ -119,6 +121,7 @@ fn run_pipeline(app: &AppHandle) -> anyhow::Result<()> {
                 set_status(app, ready);
             }
             Action::StopAndDiscard => {
+                crate::overlay::hide(app);
                 if let Some(r) = recorder.take() {
                     let _ = r.stop();
                 }

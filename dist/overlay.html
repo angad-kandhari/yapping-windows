@@ -1,0 +1,74 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <title>Yapping</title>
+  <style>
+    html, body { margin: 0; height: 100%; background: transparent; overflow: hidden; }
+    canvas { display: block; width: 100%; height: 100%; }
+  </style>
+</head>
+<body>
+<canvas id="wave"></canvas>
+<script>
+// Port of the Mac WaveformView: the six logo bars, free-floating. They
+// grow in from nothing, breathe while you pause, surge with your voice,
+// with a soft shadow so white bars read on any background.
+const CENTERS = [0, 3.5, 7, 10.5, 14, 17.5]; // logo geometry (24-grid)
+const SPAN = 17.5;
+const REST = [4, 9, 15, 7, 11, 3].map((h) => h * 1.5);
+const PHASES = [0.0, 1.1, 2.3, 3.6, 4.2, 5.5]; // per-bar breathing offset
+const BAR = 5, MAX = 36, GAIN = 85;
+
+let levels = [0, 0, 0, 0, 0, 0];
+let displayed = [0, 0, 0, 0, 0, 0];
+
+const canvas = document.getElementById("wave");
+const ctx = canvas.getContext("2d");
+function fit() {
+  const dpr = window.devicePixelRatio || 1;
+  canvas.width = window.innerWidth * dpr;
+  canvas.height = window.innerHeight * dpr;
+  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+}
+fit();
+window.addEventListener("resize", fit);
+
+const { listen } = window.__TAURI__.event;
+listen("mic-level", (e) => {
+  levels.shift();
+  levels.push(e.payload || 0);
+});
+listen("overlay-reset", () => {
+  levels = [0, 0, 0, 0, 0, 0];
+  displayed = [0, 0, 0, 0, 0, 0]; // bars grow in from nothing via the easing
+});
+
+function draw(now) {
+  const w = window.innerWidth, h = window.innerHeight;
+  const t = now / 1000;
+  ctx.clearRect(0, 0, w, h);
+  ctx.save();
+  ctx.shadowColor = "rgba(0,0,0,0.45)"; // legible on light backgrounds
+  ctx.shadowBlur = 5;
+  ctx.shadowOffsetY = 1;
+  ctx.fillStyle = "#fff";
+  const scaleX = (w * 0.52) / SPAN;
+  const left = (w - w * 0.52) / 2;
+  for (let i = 0; i < 6; i++) {
+    const breath = 0.82 + 0.18 * Math.sin(t * 2.4 + PHASES[i]);
+    const rest = REST[i] * breath;
+    const target = rest + (MAX - rest) * Math.min(1, levels[i] * GAIN);
+    displayed[i] += (target - displayed[i]) * 0.35;
+    const bh = Math.max(BAR, Math.min(displayed[i], h - 10));
+    ctx.beginPath();
+    ctx.roundRect(left + CENTERS[i] * scaleX - BAR / 2, (h - bh) / 2, BAR, bh, BAR / 2);
+    ctx.fill();
+  }
+  ctx.restore();
+  requestAnimationFrame(draw);
+}
+requestAnimationFrame(draw);
+</script>
+</body>
+</html>

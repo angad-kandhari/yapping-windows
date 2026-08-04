@@ -13,6 +13,8 @@ otherwise untouched. Never use em dashes. Return only the cleaned text, nothing 
 pub struct Settings {
     pub trailing_space: bool,
     pub copy_only: bool,
+    /// Show the waveform overlay above the taskbar while recording.
+    pub overlay: bool,
     /// "none" | "ollama" | "custom"
     pub cleanup: String,
     pub ollama_url: String,
@@ -32,6 +34,7 @@ impl Default for Settings {
         Self {
             trailing_space: true,
             copy_only: false,
+            overlay: true,
             cleanup: "none".into(),
             ollama_url: "http://localhost:11434".into(),
             ollama_model: "gemma3:4b".into(),
