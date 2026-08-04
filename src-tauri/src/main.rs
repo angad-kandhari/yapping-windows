@@ -20,6 +20,7 @@ mod models;
 mod paste;
 mod session;
 mod state;
+mod styles;
 mod updates;
 
 use tauri::menu::{Menu, MenuItem};

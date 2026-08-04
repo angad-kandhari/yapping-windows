@@ -54,13 +54,23 @@ fn run_pipeline(app: &AppHandle) -> anyhow::Result<()> {
     let events = crate::hotkey::spawn();
     let mut session = Session::default();
     let mut recorder: Option<crate::audio::Recorder> = None;
+    let mut active_style: Option<crate::styles::Style> = None;
 
     for event in events {
         match session.handle(event) {
             Action::StartRecording => match crate::audio::Recorder::start() {
                 Ok(r) => {
+                    // The style is decided by whichever app the words are
+                    // headed for, captured before anything else happens.
+                    active_style = crate::styles::matching(
+                        &crate::config::get().styles,
+                        crate::styles::foreground_process().as_deref(),
+                    );
                     recorder = Some(r);
-                    set_status(app, "Listening…");
+                    match &active_style {
+                        Some(s) => set_status(app, &format!("Listening… ({})", s.name)),
+                        None => set_status(app, "Listening…"),
+                    }
                 }
                 Err(e) => {
                     session.handle(yapping_core::KeyEvent::Cancelled);
@@ -79,10 +89,16 @@ fn run_pipeline(app: &AppHandle) -> anyhow::Result<()> {
                     let raw = raw.trim().to_string();
                     if !raw.is_empty() {
                         let settings = crate::config::get();
-                        if settings.cleanup != "none" {
+                        let style = active_style.take();
+                        let verbatim = style.as_ref().is_some_and(|s| s.verbatim);
+                        if settings.cleanup != "none" && !verbatim {
                             set_status(app, "Cleaning up…");
                         }
-                        let (out, cleaned) = crate::cleanup::apply(&raw);
+                        let (out, cleaned) = if verbatim {
+                            (raw.clone(), None)
+                        } else {
+                            crate::cleanup::apply(&raw, style.as_ref())
+                        };
                         let text = if settings.trailing_space {
                             format!("{out} ")
                         } else {

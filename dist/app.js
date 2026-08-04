@@ -71,6 +71,7 @@ async function loadSettings() {
   $("s-custom-model").value = settings.custom_model;
   $("s-prompt").value = settings.prompt;
   renderCleanupRows();
+  renderStyles();
 }
 bindToggle("s-trailing", "trailing_space");
 bindToggle("s-copyonly", "copy_only");
@@ -89,6 +90,75 @@ $("s-prompt-reset").addEventListener("click", async () => {
   settings.prompt = await invoke("default_prompt");
   $("s-prompt").value = settings.prompt;
   scheduleSave();
+});
+
+// ---- per-app styles ----
+function escAttr(s) {
+  return esc(s).replace(/"/g, "&quot;");
+}
+function renderStyles() {
+  const list = $("styles-list");
+  list.innerHTML = settings.styles
+    .map((st, i) => {
+      const prompt = st.verbatim
+        ? ""
+        : '<div class="row" style="display:block"><label>Style prompt</label>' +
+          '<textarea data-k="prompt" spellcheck="false" style="margin-top:8px">' +
+          esc(st.prompt) + "</textarea></div>";
+      return (
+        '<div class="style-entry" data-i="' + i + '">' +
+        '<div class="row"><label>Name</label><input type="text" data-k="name" value="' +
+        escAttr(st.name) + '"></div>' +
+        '<div class="row"><label>Applies to<span class="sub">Process name contains, comma separated: slack, code.exe, outlook…</span></label>' +
+        '<input type="text" data-k="app_patterns" spellcheck="false" value="' +
+        escAttr(st.app_patterns.join(", ")) + '"></div>' +
+        '<div class="row"><label>Verbatim<span class="sub">Skip cleanup entirely in these apps.</span></label>' +
+        '<span class="switch"><input type="checkbox" data-k="verbatim"' +
+        (st.verbatim ? " checked" : "") + '><span class="track"></span></span></div>' +
+        prompt +
+        '<div class="row"><button class="btn ghost small" data-del="' + i + '">Delete style</button></div>' +
+        "</div>"
+      );
+    })
+    .join("");
+  list.querySelectorAll(".style-entry").forEach((el) => {
+    const style = settings.styles[Number(el.dataset.i)];
+    el.querySelectorAll("[data-k]").forEach((input) => {
+      const key = input.dataset.k;
+      if (key === "verbatim") {
+        input.addEventListener("change", (e) => {
+          style.verbatim = e.target.checked;
+          scheduleSave();
+          renderStyles();
+        });
+      } else if (key === "app_patterns") {
+        input.addEventListener("input", (e) => {
+          style.app_patterns = e.target.value
+            .split(",")
+            .map((p) => p.trim())
+            .filter(Boolean);
+          scheduleSave();
+        });
+      } else {
+        input.addEventListener("input", (e) => {
+          style[key] = e.target.value;
+          scheduleSave();
+        });
+      }
+    });
+  });
+  list.querySelectorAll("[data-del]").forEach((b) => {
+    b.addEventListener("click", () => {
+      settings.styles.splice(Number(b.dataset.del), 1);
+      scheduleSave();
+      renderStyles();
+    });
+  });
+}
+$("style-add").addEventListener("click", () => {
+  settings.styles.push({ name: "New style", app_patterns: [], prompt: "", verbatim: false });
+  scheduleSave();
+  renderStyles();
 });
 
 // ---- setup ----

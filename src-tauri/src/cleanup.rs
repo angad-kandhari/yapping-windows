@@ -6,11 +6,22 @@ use serde_json::{json, Value};
 use std::time::Duration;
 
 /// Returns (text to insert, cleaned text if cleanup ran and passed).
-pub fn apply(raw: &str) -> (String, Option<String>) {
+/// A per-app style's instructions are appended to the system prompt,
+/// same as the Mac app.
+pub fn apply(raw: &str, style: Option<&crate::styles::Style>) -> (String, Option<String>) {
     let settings = crate::config::get();
+    let mut prompt = settings.prompt.clone();
+    if let Some(style) = style {
+        if !style.prompt.is_empty() {
+            prompt.push_str(&format!(
+                "\n\nStyle for this app ({}): {}",
+                style.name, style.prompt
+            ));
+        }
+    }
     let cleaned = match settings.cleanup.as_str() {
-        "ollama" => ollama(raw, &settings),
-        "custom" => custom(raw, &settings),
+        "ollama" => ollama(raw, &settings, &prompt),
+        "custom" => custom(raw, &settings, &prompt),
         _ => None,
     };
     match cleaned {
@@ -26,12 +37,12 @@ fn client() -> Option<reqwest::blocking::Client> {
         .ok()
 }
 
-fn ollama(raw: &str, s: &crate::config::Settings) -> Option<String> {
+fn ollama(raw: &str, s: &crate::config::Settings, prompt: &str) -> Option<String> {
     let body = json!({
         "model": s.ollama_model,
         "stream": false,
         "messages": [
-            {"role": "system", "content": s.prompt},
+            {"role": "system", "content": prompt},
             {"role": "user", "content": raw}
         ]
     });
@@ -46,14 +57,14 @@ fn ollama(raw: &str, s: &crate::config::Settings) -> Option<String> {
     sanitize(text, raw)
 }
 
-fn custom(raw: &str, s: &crate::config::Settings) -> Option<String> {
+fn custom(raw: &str, s: &crate::config::Settings, prompt: &str) -> Option<String> {
     if s.custom_url.is_empty() || s.custom_model.is_empty() {
         return None;
     }
     let body = json!({
         "model": s.custom_model,
         "messages": [
-            {"role": "system", "content": s.prompt},
+            {"role": "system", "content": prompt},
             {"role": "user", "content": raw}
         ]
     });

@@ -21,6 +21,9 @@ pub struct Settings {
     pub custom_key: String,
     pub custom_model: String,
     pub prompt: String,
+    /// Per-app dictation styles, chosen by the foreground app at the
+    /// moment the hold starts.
+    pub styles: Vec<crate::styles::Style>,
     pub onboarded: bool,
 }
 
@@ -36,6 +39,7 @@ impl Default for Settings {
             custom_key: String::new(),
             custom_model: String::new(),
             prompt: DEFAULT_PROMPT.into(),
+            styles: crate::styles::defaults(),
             onboarded: false,
         }
     }
