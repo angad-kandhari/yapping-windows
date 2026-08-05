@@ -1,0 +1,11 @@
+blank_issues_enabled: true
+contact_links:
+  - name: Questions and setup help
+    url: https://get-yapping.com/#faq
+    about: The FAQ covers permissions, the hotkey, cleanup providers, and each platform.
+  - name: macOS app
+    url: https://github.com/angad-kandhari/yapping/issues
+    about: Bugs in that build belong in its own repository.
+  - name: Linux beta
+    url: https://github.com/angad-kandhari/yapping-linux/issues
+    about: Bugs in that build belong in its own repository.

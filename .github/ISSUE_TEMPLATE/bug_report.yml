@@ -1,0 +1,87 @@
+name: Bug report
+description: Something in the yapping Windows beta is broken
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        This is a beta, so thank you for the report. Running yapping from a
+        terminal captures the output that usually explains the failure.
+
+  - type: input
+    id: version
+    attributes:
+      label: yapping version
+      placeholder: "0.4.0"
+    validations:
+      required: true
+
+  - type: input
+    id: system
+    attributes:
+      label: Windows version
+      description: Settings > System > About, or run `winver`.
+      placeholder: "Windows 11 24H2, build 26100"
+    validations:
+      required: true
+
+  - type: textarea
+    id: what_happened
+    attributes:
+      label: What happened
+      description: What you did, what you expected, and what happened instead.
+      placeholder: |
+        1. Held Ctrl+Win in Notepad
+        2. Said "ship it tomorrow"
+        3. Expected the text to paste; nothing appeared
+    validations:
+      required: true
+
+  - type: textarea
+    id: output
+    attributes:
+      label: Terminal output
+      description: |
+        Run the app from a terminal so the output is visible, reproduce the
+        problem, and paste what appears here.
+      render: text
+    validations:
+      required: false
+
+  - type: dropdown
+    id: provider
+    attributes:
+      label: Cleanup provider
+      options:
+        - Ollama
+        - Custom endpoint
+        - Cleanup turned off
+        - Not sure
+    validations:
+      required: false
+
+  - type: dropdown
+    id: area
+    attributes:
+      label: Where it went wrong
+      options:
+        - Dictation (hold Ctrl+Win)
+        - Hands-free (double tap)
+        - Recording overlay
+        - Listen mode (system audio)
+        - File transcription
+        - Settings or history
+        - Install or first run (model download)
+        - Something else
+    validations:
+      required: false
+
+  - type: checkboxes
+    id: checks
+    attributes:
+      label: Before submitting
+      options:
+        - label: I am on the latest release
+          required: false
+        - label: I searched existing issues
+          required: false
