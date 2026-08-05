@@ -115,7 +115,7 @@ pub fn foreground_process() -> Option<String> {
         if pid == 0 {
             return None;
         }
-        let handle = OpenProcess(PROCESS_QUERY_LIMITED_INFORMATION, false.into(), pid).ok()?;
+        let handle = OpenProcess(PROCESS_QUERY_LIMITED_INFORMATION, false, pid).ok()?;
         let mut buf = [0u16; 1024];
         let mut len = buf.len() as u32;
         let queried = QueryFullProcessImageNameW(
